@@ -141,11 +141,10 @@ class Strategy:
         self.db.checkdbconnect() 
 
 
-   '''#def tdrsispxscalp(self)  #def tdrsispxswing(self) #def testqueryscalp(self)
+  
     #def gexminmax presents the levels of the day #specific to gex , combo with rsi td9 gap lines might be the killer, dark pools as well,
-    # next strat to impement: treasury auctions. Yellen selling short term treasuries is going to draw down ON RRP.
+    # next strat to impement: treasury auctions? Yellen selling short term treasuries is going to draw down ON RRP.
     #  That’s why we got the rally. Short term, specifically the 3mo, is used as collateral for the market''' 
    #if the 1hr 2 4hr or day rsi are at extremes warn before
-   # trade presented, also check gap lines if gap line
-   # is within 5 points of the rsitd9 boolean true then
+   # trade presented, also check gap lines if GAP LINES (DAILY) is within 5 points of the rsitd9 boolean true then
    # wait until it reaches gap line to place order

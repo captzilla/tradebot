@@ -1,0 +1,19 @@
+#
+# Author: Lasse Collin
+#
+# This file has been put into the public domain.
+# You can do whatever you want with this file.
+#
+
+prefix=/home/captzilla/Documents/Codeine/condaenvs/autobot311
+exec_prefix=/home/captzilla/Documents/Codeine/condaenvs/autobot311
+libdir=/home/captzilla/Documents/Codeine/condaenvs/autobot311/lib
+includedir=/home/captzilla/Documents/Codeine/condaenvs/autobot311/include
+
+Name: liblzma
+Description: General purpose data compression library
+URL: https://tukaani.org/xz/
+Version: 5.4.2
+Cflags: -I${includedir}
+Libs: -L${libdir} -llzma
+Libs.private: -pthread -lpthread

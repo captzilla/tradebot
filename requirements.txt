@@ -1,0 +1,7 @@
+
+requests
+disnake
+asyncio
+polygonsdk
+webullsdk
+psycopg2

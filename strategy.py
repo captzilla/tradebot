@@ -132,11 +132,6 @@ class Strategy:
     def rsitd9spx13(self):
         pass 
 
-
-
-
-    
-
     def checkdbconnect(self):
         self.db.checkdbconnect() 
 

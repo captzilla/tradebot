@@ -8,37 +8,7 @@ from webull import webull, paper_webull
 class WebullData:
     
     def __init__(self):
-         
-        self.username = input("Enter your username: ")
-        
-        if self.username.endswith("-real"):
-            self.account_type = "real"
-            self.username = self.username[:-6]  # Remove the "-real" suffix
-        else:
-            self.account_type = "paper"
-
-        if self.account_type == "paper":
-            self.wb = paper_webull()
-            print("creating paper webull class")
-        elif self.account_type == "real":
-            self.wb = webull()
-            print("creating real webull")
-        else:
-            print("Invalid account type. Please enter 'paper' or 'real'.")
-            return
-
-        
-        self.wb._acct_id = user_data[self.username].get("account_id")
-        self.wb._paper_acct_id = user_data[self.username].get("paper_acct_id")      
-        self.wb._access_token = user_data[self.username].get("access_token")
-        self.wb._trade_token = user_data[self.username].get("trade_token")
-        self.wb._trade_pin = user_data[self.username].get("trade_pin")
-        self.wb._token_expire = user_data[self.username].get("token_expire")
-        self.wb._usr = user_data[self.username].get("login_usr")
-        self.wb._pwd = user_data[self.username].get("login_pwd")  
-        
-        self.headers = self.wb.build_req_headers()
-        #print(self.headers) #  if needed to check headers 
+   
 
 """
     class AccountSummary:

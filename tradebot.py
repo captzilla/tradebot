@@ -1,19 +1,12 @@
-'''Objective is for tradebot to listen to the strategies in strategy class
-   and if one of them is True then have the tradebot class lightitup method
-   create option contract(s) order(s) using the strategies as the basis for
-   variable passings for example if rsitd9spx25 method is true in strategy then
-   check the acct buying power to calculate a 30% usage to order contracts. contracts 
-   ordering will be done by checking if the 30% buying power, bp, is sufficient to 
-   get the itm strike price based on direction(call/put) and by expiration one day
-   from expire based on the latest price the instance the strategy passed as true.
-    It will check  4 strike prices, the itm one, and the closest otm ones.  '''
+'''Objective is for tradebot to listen to the strategies in strategy.py
+   -IF True then trigger the tradebot class lightitup methods
+   -create option contract(s) order(s) using that strategy as the basis for variable passings
+   - tweaking different ways to set the order (atm,otm,%ofbuyingpower,takeprofit%,stoploss%,etc)  '''
 
 from webullbot import WebullBot
 from strategy import Strategy 
 from config import db
 from datetime import datetime
-
-
 
 class TradieBot:
     def __init__(self):
@@ -46,7 +39,7 @@ class TradieBot:
                 direction = strat_data['sentiment']
                 expiration_date = strat_data['event_date']
 
-            # Step 2: Calculate strikes,mids for LMTPRICE, and QUANT needed for placing order
+            # Step 2: Calculate strikes,mids for LMTPRICE, and QUANT needed for creating contract order(s)
                 strike_data = self.wbbot.wb_action.get_option_strikes(stock=ticker, expireDate=expiration_date, direction=direction)
                 itm_strike = strike_data['itm_strike']
                 otm_strikes = strike_data['otm_strikes']
@@ -54,6 +47,8 @@ class TradieBot:
                 trade_amount = 0.3 * buying_power
 
                 # Loop through the strikes to find the optimal choice  
+                ''' try setting a time condition so if its 0dte retrieve strikes differently'''
+                
                 for strike in [itm_strike] + otm_strikes:
                     option_data = self.wbbot.wb_action.get_strike_and_expdate(stock=ticker, expireDate=expiration_date, strike=str(strike), direction=direction)
                     mid_price = option_data.get('mid_price', 0)

@@ -3,7 +3,7 @@
 #  in webull to 
 #aquire the webull order info as well as best as can be done
 #also gotta modify the webullsdk if necessary to include
-#endpoints for all of this if its not there.
+#endpoints for all of this logic if its not there.
 
 import json
 import requests
@@ -41,17 +41,36 @@ class WebullBot:
         self.wb._acct_id = self.user_data[self.username].get("account_id")
         self.wb._paper_acct_id = self.user_data[self.username].get("paper_acct_id")      
         self.wb._access_token = self.user_data[self.username].get("access_token")
+        #self.wb._refresh_token = self.user_data{self.username}.get("refresh_token")
         self.wb._trade_token = self.user_data[self.username].get("trade_token")
         self.wb._trade_pin = self.user_data[self.username].get("trade_pin")
         self.wb._token_expire = self.user_data[self.username].get("token_expire")
         self.wb._usr = self.user_data[self.username].get("login_usr")
         self.wb._pwd = self.user_data[self.username].get("login_pwd")  
+
         
         self.headers = self.wb.build_req_headers()
         #print(self.headers) #  if needed to check headers     
+ 
     def checkauth(self):
-        print("Authentication: ", self.wb.get_trade_token(self.wb._trade_pin))  
-        #if false check accesstoken,tradetoken,in config, these reset after logout           
+        # First, we check that trade token.
+        trade_token_check = self.wb.get_trade_token(self.wb._trade_pin)
+        print("Authentication: ", trade_token_check)
+
+        '''# If it ain't right, we gotta dive deeper.
+        if not trade_token_check:
+            # Check if access token's gone bad.
+            access_token_status = self.wb.refresh_login()
+            print(access_token_status)
+            if 'access_token' not in access_token_status:
+                print("Yo, your access token's messed up!")
+
+            # Now we check that trade token.
+            trade_token_status = self.wb.refresh_trade_token(self.wb._trade_pin)
+            if 'trade_token' not in trade_token_status:
+                print("Man, that trade token ain't right either!")
+         HAVE TO RETRIEVE ACCESS AND TRADE TOKENS WON'T WORK(...YET)'''
+       
 
     class WebullCheck:
         def __init__(self, bot) :
@@ -64,7 +83,7 @@ class WebullBot:
                     if self.bot.account_type == "paper":  
                         print(self.bot.wb.get_account(paper_acct_id=self.bot.wb._paper_acct_id))
                     elif self.bot.account_type == "real":  
-                        return self.bot.wb.get_account_id(), self.bot.wb.get_account()
+                        print(self.bot.wb.get_account_id(), self.bot.wb.get_account())
                                   
         def mypositions(self):
             check_positions = input("Do you want to check positions? (yes/no): ").strip().lower()
@@ -72,30 +91,30 @@ class WebullBot:
                 if hasattr(self.bot, 'account_type'): 
                     if self.bot.account_type == "paper":
                         account_info = self.bot.wb.get_account(paper_acct_id=self.wb._paper_acct_id)  
-                        return account_info['positions'] 
+                        print(account_info['positions']) 
                     elif self.bot.account_type == "real":
-                        return self.bot.wb.get_positions() 
+                        print(self.bot.wb.get_positions()) 
 
         def my_history_orders(self,status=None, count=None):
-            if hasattr(self, 'account_type'): 
-                if self.account_type == "paper":
-                    history_order = self.wb.get_history_orders(status=status, count=count) 
-                    return history_order
-                elif self.account_type == "real": 
-                    history_order = self.wb.get_history_orders(status=status, count=count)
-                return history_order 
+            if hasattr(self.bot, 'account_type'): 
+                if self.bot.account_type == "paper":
+                    history_order = self.bot.wb.get_history_orders(status=status, count=count) 
+                    print(history_order)
+                elif self.bot.account_type == "real": 
+                    history_order = self.bot.wb.get_history_orders(status=status, count=count)
+                    print(history_order) 
 
     class WebullAction:
         def __init__(self, bot) :
             self.bot = bot
     
         def get_option_strikes(self, stock, expireDate, direction, num_otm=3, include_itm=True):
-            options = self.wb.get_options(stock=stock, expireDate=expireDate, direction=direction)
+            options = self.bot.wb.get_options(stock=stock, expireDate=expireDate, direction=direction)
             available_strikes = sorted([float(option['strikePrice']) for option in options])
 
             #print(f"Available Strikes: {available_strikes}")  # Debugging line
 
-            quote = self.wb.get_quote(stock=stock)
+            quote = self.bot.wb.get_quote(stock=stock)
             latest_price = float(quote['close'])
             print(f"Latest Price for {stock}: {latest_price}")
 
@@ -114,12 +133,12 @@ class WebullBot:
             
         def get_strike_and_expdate(self, stock, expireDate, strike, direction):
             #Gets latest price of symbol, strike and expdate and its details into option_data 
-            quote = self.wb.get_quote(stock=stock)
+            quote = self.bot.wb.get_quote(stock=stock)
             latest_price = float(quote['close'])
             print(f"Latest Price for {stock}: {latest_price}")
         
             # Get options for the specified expiration date and stock
-            options =  self.wb.get_options_by_strike_and_expire_date(stock=stock,
+            options =  self.bot.wb.get_options_by_strike_and_expire_date(stock=stock,
                         expireDate=expireDate, strike=strike, direction=direction)
 
             option_data = options[0][direction] if options and direction in options[0] else None 
@@ -128,7 +147,7 @@ class WebullBot:
         
             optionId = option_data['tickerId'] if option_data else None
             if optionId:
-                option_quote_data = self.wb.get_option_quote(stock=stock, optionId=optionId)
+                option_quote_data = self.bot.wb.get_option_quote(stock=stock, optionId=optionId)
                 #print("Option Quote Data: ", option_quote_data) debugging 
 
                 # Merge the dictionaries
@@ -156,17 +175,17 @@ class WebullBot:
             
 
         def start_order(self, optionId, lmtPrice, stpPrice, action, orderType,enforce,quant):
-            if hasattr(self, 'account_type'):
-                if self.account_type == "paper":
-                    self.wb.place_option_order(optionId=optionId,lmtPrice=lmtPrice,
+            if hasattr(self.bot, 'account_type'):
+                if self.bot.account_type == "paper":
+                    self.bot.wb.place_option_order(optionId=optionId,lmtPrice=lmtPrice,
                     action=action, orderType=orderType,enforce=enforce, quant=quant)
                     
 
                 elif self.account_type == "real":
-                    self.wb.place_option_order(optionId=optionId,lmtPrice=lmtPrice,
+                    self.bot.wb.place_option_order(optionId=optionId,lmtPrice=lmtPrice,
                     stpPrice=None, action=action, orderType=orderType, quant=quant)
 
-                    return self.wb.openorder() 
+                    return self.bot.wb.openorder() 
 
                     
         def get_activities(self):
@@ -176,7 +195,7 @@ class WebullBot:
 
     async def main(self):
         self.checkauth()
-        self.webullcheck.acctstatus()
+        #self.webullcheck.acctstatus()
         
         #strike_and_expdate_options = self.wb_action.get_strike_and_expdate(stock="spy", expireDate="2023-10-13", strike='427',direction='call')
         #print(strike_and_expdate_options)

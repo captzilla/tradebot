@@ -5,14 +5,15 @@
 #also gotta modify the webullsdk if necessary to include
 #endpoints for all of this logic if its not there.
 
+import os
 import json
 import requests
 from typing import List
 import aiohttp
 import asyncio
-import config
 from  webull import webull, paper_webull
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class WebullBot:
     def __init__(self):
@@ -37,18 +38,19 @@ class WebullBot:
             print("Invalid account type. Please enter 'paper' or ' real'.")
             return
 
-        self.user_data = config.user_data
-        self.wb._acct_id = self.user_data[self.username].get("account_id")
-        self.wb._paper_acct_id = self.user_data[self.username].get("paper_acct_id")      
-        self.wb._access_token = self.user_data[self.username].get("access_token")
-        #self.wb._refresh_token = self.user_data{self.username}.get("refresh_token")
-        self.wb._trade_token = self.user_data[self.username].get("trade_token")
-        self.wb._trade_pin = self.user_data[self.username].get("trade_pin")
-        self.wb._token_expire = self.user_data[self.username].get("token_expire")
-        self.wb._usr = self.user_data[self.username].get("login_usr")
-        self.wb._pwd = self.user_data[self.username].get("login_pwd")  
+        #get the user data from .env file which houses the sensitive info
+        user_data_str = os.getenv("USER_DATA")
+        self.user_data = json.loads(user_data_str) if user_data_str else {}
 
-        
+        self.wb._acct_id = self.user_data.get(self.username, {}).get("account_id")
+        self.wb._paper_acct_id = self.user_data.get(self.username, {}).get("paper_acct_id")      
+        self.wb._access_token = self.user_data.get(self.username, {}).get("access_token")
+        self.wb._trade_token = self.user_data.get(self.username, {}).get("trade_token")
+        self.wb._trade_pin = self.user_data.get(self.username, {}).get("trade_pin")
+        self.wb._token_expire = self.user_data.get(self.username, {}).get("token_expire")
+        self.wb._usr = self.user_data.get(self.username, {}).get("login_usr")
+        self.wb._pwd = self.user_data.get(self.username, {}).get("login_pwd")  
+
         self.headers = self.wb.build_req_headers()
         #print(self.headers) #  if needed to check headers     
  

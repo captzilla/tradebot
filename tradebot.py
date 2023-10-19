@@ -1,4 +1,5 @@
-'''Objective is for tradebot to listen to the strategies in strategy.py
+'''Objective is for tradebot to listen to the strategies in strategy.py waiti ts bruhhbot/discordbot now since 
+    ya cant access the database , charlie said go thru the discord channels instead?
    -IF True then trigger the tradebot class lightitup methods
    -create option contract(s) order(s) using that strategy as the basis for variable passings
    - tweaking different ways to set the order (atm,otm,%ofbuyingpower,takeprofit%,stoploss%,etc)  '''
@@ -8,17 +9,18 @@ from strategy import Strategy
 from config import db
 from datetime import datetime
 
-class TradieBot:
+class TradeBot:
     def __init__(self):
         self.wbbot = WebullBot()  # Instantiate WebullBot Class
         self.stratbot = Strategy()  # Instantiate the Strategy class
+        self.bruhhbot = BruhhBot() # INstantiate the BruhhBot class
 
 
    def stratlistener(self, strategy_name):
-    strategy_met, strat_data = getattr(self.stratbot, strategy_name)()
+    strategy_met, strat_data = getattr(self.bruhhbot, strategy_name)()
     if strategy_met:
         return True, strategy_name, strat_data
-    return False, None, None
+    
 
     class LightItUp:
         def __init__(self,wbbot):
@@ -142,18 +144,19 @@ class TradieBot:
                 
 # main function
 async def main():
-    trading_bot = TradieBot()
-    strategy_list = ['rsitd9spx25', 'rsitd9spx13']  # Add new strategies here
+    trading_bot = TradeBot()
 
     while True:
-        for strat in strategy_list:
-            strat_met, strat_name, strat_data = trading_bot.stratlistener(strat)
+        # Wait for a strategy to be triggered in BruhhBot
+        await bruhh_bot.strategy_event.wait()
         
-            if strat_met:
-                ingredients = light_it_up.ingredients(strat_data)
-                light_it_up.order(**ingredients)
-        
-        await asyncio.sleep(60)  # Sleep for 60 seconds
+        # Once the strategy is triggered, proceed with your logic
+        strat_met, strat_name, strat_data = trading_bot.stratlistener(strat_name_from_bruhhbot)
+        if strat_met:
+            ingredients = light_it_up.ingredients(strat_data)
+            light_it_up.order(**ingredients)
+
+        await asyncio.sleep(60)
 
 if __name__ == '__main__':
     asyncio.run(main())

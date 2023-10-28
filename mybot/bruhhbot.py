@@ -8,11 +8,19 @@ load_dotenv()
 
 intents = disnake.Intents.all()
 
+def list_strategies(self):
+        return [func for func in dir(self) if callable(getattr(self, func)) and not func.startswith("__")]
+
 class BruhhBot(commands.Bot):
+    
     def __init__(self, command_prefix, intents=intents):
         super().__init__(command_prefix, intents=intents)
         self.strategy_event = asyncio.Event()
-        
+        await self.strategy_event.set()
+
+    def list_strategies(self):
+        return [func for func in dir(self) if callable(getattr(self, func)) and not func.startswith("__")]
+    
 
     async def on_ready(self):
         print(f"Bot is ready! Logged in as {self.user.name}")
@@ -29,14 +37,15 @@ class BruhhBot(commands.Bot):
                 
                 # Run your flow strategy check
                 if self.check_flow():
-                    self.strategy_event.set()
-                    await message.channel.send("Flow strategy triggered. Time to trade.")
+                    await self.strategy_event.set()
+                    await message.channel.send("Flow strategy triggered. Time to trade:")
                     
                 # Check for 'SPX' or 'SPY' ticker only in the rsitd9spx25 strategy
                 if any(ticker in (embed.title or "") or ticker in (embed.description or "") for ticker in ["SPX", "SPY"]):
                     if self.check_rsitd9spx25():
                         self.strategy_event.set()
                         await message.channel.send("rsitd9spx25 strategy triggered. Time to trade.")
+
 
                 
     def check_flow(self):

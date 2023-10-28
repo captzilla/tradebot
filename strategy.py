@@ -1,43 +1,53 @@
-
-from config import db
-import psycopg2
-from datetime import datetime
-from pytz
+import asyncpg
+from datetime import datetime, time
+import pytz  
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class Fudstopdb:
     def __init__(self):
-        self.conn = psycopg2.connect(
-            dbname=db['dbname'],
-            host=db['host'],
-            user=db['user'],
-            password=db['password']
-            # Add other database connection parameters if needed
+        pass
+
+    async def connect(self):    
+        #grabs the credential data for the postgresql database 
+        self.conn = await asyncpg.connect(
+            dbname=os.getenv('DB_NAME'),
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASS')
+            
         )
 
         self.dbconnect = True
 
-    def retrieve_dbdata(self, query):
+    async def retrieve_dbdata(self, query):
         try:
-            cursor = self.conn.cursor()
-            cursor.execute(query)
-            data = cursor.fetchall()
-            cursor.close()
-            return data
+            return await self.conn.fetch(query)
         except Exception as e:
-            print(f"Error retrieving data: {str(e)}")
+            print(f"Error: {str(e)}")
             return []
 
     def checkdbconnect(self):
+
         if self.dbconnect:
             print("You are connected to the database.")
         else:
             print("Not connected to the database.")
 
+
 class Strategy:
     def __init__(self):
         self.db = Fudstopdb()
+    
+    async def connect_db(self):
+        await self.db.connect()
+
+     def list_strategies(self):
+        return [func for func in dir(self) if callable(getattr(self, func)) and not func.startswith("__")]
 
     def format_price(self, price):
+        #round up the prices to cents instead of having fuck ton of 0s
         if price >= 1000000:
             return f"${price / 1000000:.1f}M"
         elif price >= 1000:
@@ -45,7 +55,8 @@ class Strategy:
         else:
             return f"${price:.2f}"
 
-    def flow(self):
+    async def flow(self):
+        #strategy for flow of options within a range of over 30 days and over 100k 
         query = """
             SELECT strike, underlying_symbol, call_put, expiry, 
             SUM(size) as total_size, 
@@ -59,7 +70,7 @@ class Strategy:
             ORDER BY total_size DESC;
         """
 
-        data = self.db.retrieve_dbdata(query)
+        data = await self.db.retrieve_dbdata(query)
 
         if data:
             print(f"The following data meets the flow strategy:")
@@ -79,7 +90,9 @@ class Strategy:
         else:
             print("No data found for the test queyr strategy")  
 
-    def rsitd9spx25(self):
+    async def rsitd9spx25(self):
+        #listen for td9 2min and 5 min with extreme rsi during time zones (zones of time during the trade day where volume picksup)
+
         # Timezone and current time check
         est = pytz.timezone('US/Eastern')
         current_time = datetime.now(est).time()
@@ -137,9 +150,9 @@ class Strategy:
 
 
   
-    #def gexminmax presents the levels of the day #specific to gex , combo with rsi td9 gap lines might be the killer, dark pools as well,
-    # next strat to impement: treasury auctions? Yellen selling short term treasuries is going to draw down ON RRP.
-    #  That’s why we got the rally. Short term, specifically the 3mo, is used as collateral for the market''' 
-   #if the 1hr 2 4hr or day rsi are at extremes warn before
-   # trade presented, also check gap lines if GAP LINES (DAILY) is within 5 points of the rsitd9 boolean true then
-   # wait until it reaches gap line to place order
+  #def gexminmax presents the levels of the day #specific to gex , combo with rsi td9 gap lines might be the killer, dark pools as well,
+  #a treasury strategy ? tlt ? 
+  #if the 1hr 2 4hr or day rsi are at extremes warn before
+  # trade presented, also check gap lines if GAP LINES (DAILY) is within 5 points of the rsitd9 boolean true then
+  # wait until it reaches gap line to place order
+  #yea next order of businesss is to setup the gap lines somehow to combine with the td9 and rsi

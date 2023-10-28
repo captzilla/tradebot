@@ -1,7 +1,7 @@
 # objective is to get the webull paper and real acct
 # and use the webull endpoint urls
 #  in webull to 
-#aquire the webull order info as well as best as can be done
+#aquire the webull order info as best as can be done
 #also gotta modify the webullsdk if necessary to include
 #endpoints for all of this logic if its not there.
 
@@ -17,6 +17,9 @@ load_dotenv()
 
 class WebullBot:
     def __init__(self):
+    #get acct types (paper or real) basedo on user input
+    #load info from .env file and set headers for requests to webull
+
         self.webullcheck = self.WebullCheck(self) 
         self.webullaction = self.WebullAction(self)
 
@@ -55,7 +58,8 @@ class WebullBot:
         #print(self.headers) #  if needed to check headers     
  
     def checkauth(self):
-        # First, we check that trade token.
+        # First, we check that trade token.how the f does one have it automate if false, have to change manual for now. not
+        #to big a deal for maintenance, just trade token and access token everything else seems to be static.
         trade_token_check = self.wb.get_trade_token(self.wb._trade_pin)
         print("Authentication: ", trade_token_check)
 
@@ -75,6 +79,7 @@ class WebullBot:
        
 
     class WebullCheck:
+        #This class checks webull account info 
         def __init__(self, bot) :
             self.bot = bot
 
@@ -107,6 +112,7 @@ class WebullBot:
                     print(history_order) 
 
     class WebullAction:
+        #This class focuses on actionable functions to do on webull
         def __init__(self, bot) :
             self.bot = bot
     

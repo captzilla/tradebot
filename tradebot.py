@@ -1,25 +1,26 @@
-'''Objective is for tradebot to listen to the strategies in strategy.py waiti ts bruhhbot/discordbot now since 
-    ya cant access the database , charlie said go thru the discord channels instead?
+'''Objective is for tradebot to listen to the strategies in strategy.py or bruhhbot.py 
+   -to use the discord server or database server to formulate strategies
    -IF True then trigger the tradebot class lightitup methods
    -create option contract(s) order(s) using that strategy as the basis for variable passings
    - tweaking different ways to set the order (atm,otm,%ofbuyingpower,takeprofit%,stoploss%,etc)  '''
 
 from webullbot import WebullBot
 from strategy import Strategy 
-from config import db
+from bruhhbot import BruhhBot
 from datetime import datetime
 
 class TradeBot:
-    def __init__(self):
-        self.wbbot = WebullBot()  # Instantiate WebullBot Class
-        self.stratbot = Strategy()  # Instantiate the Strategy class
-        self.bruhhbot = BruhhBot() # INstantiate the BruhhBot class
+    def __init__(self, chosen_strategies):
+        self.chosen_strategies = chosen_strategies
+        self.wbbot = WebullBot()  
+        self.stratbot = Strategy() 
+        self.bruhhbot = BruhhBot()
+        
 
 
-   def stratlistener(self, strategy_name):
-    strategy_met, strat_data = getattr(self.bruhhbot, strategy_name)()
-    if strategy_met:
-        return True, strategy_name, strat_data
+    async def stratlistener(self, strategy_name):
+        if strategy_name not in self.chosen_strategies:
+            return False, None, None  # Skip if not chosen
     
 
     class LightItUp:
@@ -27,7 +28,7 @@ class TradeBot:
             self.wbbot = wbbot
 
         def ingredients(self, stock, latest_price, expiration_date, strat_data):
-            #AQUIRE THE INGREDIENTS: optionId,(optimal) lmtPrice, action, orderType, enforce,(optimal) quant
+            #AQUIRE THE INGREDIENTS: optionId,(optimal) lmtPrice, action, orderType, enforce,(optimal) quant to create contract order
             # Initialize your variables here
                 optionId = None
                 lmtPrice = None
@@ -48,7 +49,7 @@ class TradeBot:
                 buying_power = float(self.wbbot.wb_check.get_account()['buyingPower'])
                 trade_amount = 0.3 * buying_power
 
-                # Loop through the strikes to find the optimal choice  
+                # Loop through the strikes to find the optimal choice of contracts and strike price 
                 ''' try setting a time condition so if its 0dte retrieve strikes differently'''
                 
                 for strike in [itm_strike] + otm_strikes:
@@ -59,7 +60,7 @@ class TradeBot:
                     if mid_price == 0:
                         continue
 
-                    # Calculate the maximum QUANT for this strike
+                    # Calculate the maximum contracts for this strike
                     possible_quant = int(trade_amount // (mid_price * 100))  # 100 is the option multiplier
 
                     if possible_quant > optimal_quant:
